@@ -1,0 +1,37 @@
+{
+  "name": "Lorem Ipsum Generator",
+  "description": "Golang based telegram bot to generate useless text.",
+  "keywords": [
+    "telegram",
+    "telegram-bot",
+    "golang tg bot",
+    "tg bot",
+    "golang bot",
+    "golang telegram"
+  ],
+  "repository": "https://github.com/DivideProjects/LoremIpsumBot",
+  "website": "https://t.me/DivideProjects",
+  "success_url": "https://t.me/DivideProjects",
+  "env": {
+    "TOKEN": {
+      "description": "Bot Token, Get It From @BotFather.",
+      "value": "",
+      "required": true
+    },
+    "AUTH_GROUP_ID": {
+      "description": "Telegram ID of your public channel.",
+      "value": "",
+      "required": true
+    },
+    "AUTH_GROUP": {
+      "description": "Username of your public channel.",
+      "value": "",
+      "required": true
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/go"
+    }
+  ]
+}
