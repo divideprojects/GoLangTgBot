@@ -35,7 +35,7 @@ func main() {
 	}
 
 	// log msg telling that bot has started
-	fmt.Printf("%s has been started...!\nMade with ❤️ by @Divkix (@DivideProjects).\n", b.User.Username)
+	fmt.Printf("%s has been started...!\nMade with ❤️ by @DivideProjects\n", b.User.Username)
 
 	// Idle, to keep updates coming in, and avoid bot stopping.
 	updater.Idle()
@@ -90,25 +90,34 @@ func get(ctx *ext.Context) error {
 	user := ctx.EffectiveUser
 	channel_id, cerror := strconv.Atoi(os.Getenv("AUTH_GROUP_ID"))
 	if cerror != nil {
+		fmt.Println(cerror)
 		fmt.Println("Please Provide me a valid Channel/Supergroup ID")
 	}
 	member, eror := ctx.Bot.GetChatMember(int64(channel_id), user.Id)
 	if eror != nil {
+		fmt.Println(eror)
 		ctx.Bot.SendMessage(ctx.EffectiveChat.Id, "Bot not admin in JoinCheck Channel", nil)
 		return nil
 	}
 
 	// For Checking either user joined channel or not
 	if member.Status == "member" || member.Status == "administrator" || member.Status == "creator" {
-		_, err := ctx.EffectiveMessage.Reply(ctx.Bot, fmt.Sprintf("lorem ipsum: %v", quote), &gotgbot.SendMessageOpts{
+		_, err := ctx.EffectiveMessage.Reply(ctx.Bot, fmt.Sprintf("*lorem ipsum:*\n%v", quote), &gotgbot.SendMessageOpts{
 			ParseMode: "Markdown",
 		})
 		if err != nil {
+			fmt.Println(err)
 			fmt.Println("failed to send: " + err.Error())
 		}
 	} else {
 		// An Error message replied to command user if he's not member of the JoinCheck Channel
-		ctx.EffectiveMessage.Reply(ctx.Bot, fmt.Sprintf("*You must join %v to use me.*", os.Getenv("AUTH_GROUP")), &gotgbot.SendMessageOpts{ParseMode: "Markdown"})
+		url, eror := ctx.Bot.ExportChatInviteLink(int64(channel_id))
+		if eror != nil {
+			fmt.Println(eror)
+			ctx.Bot.SendMessage(ctx.EffectiveChat.Id, "I need invite rights in Channel to get the invite link!", nil)
+			return nil
+		}
+		ctx.EffectiveMessage.Reply(ctx.Bot, fmt.Sprintf("*You must join* [My Bots Channel](%v) *to use me.*", url), &gotgbot.SendMessageOpts{ParseMode: "Markdown", DisableWebPagePreview: true})
 	}
 	return nil
 }

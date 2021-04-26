@@ -13,18 +13,13 @@
   "website": "https://t.me/DivideProjects",
   "success_url": "https://t.me/DivideProjects",
   "env": {
-    "TOKEN": {
+    "BOT_TOKEN": {
       "description": "Bot Token, Get It From @BotFather.",
       "value": "",
       "required": true
     },
     "AUTH_GROUP_ID": {
       "description": "Telegram ID of your public channel.",
-      "value": "",
-      "required": true
-    },
-    "AUTH_GROUP": {
-      "description": "Username of your public channel.",
       "value": "",
       "required": true
     }
