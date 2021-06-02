@@ -1,5 +1,5 @@
-# Lorem Ipsum Bot
-Lorem Ipsum Bot, written in GoLang via gotgbot library.
+# GoLang Telegram Bot
+GoLang Telegram Bot, written in GoLang via gotgbot library.
 You can even use this repository as a template to make your own GoLang Telegram Bot.
 
 # Variables
@@ -17,8 +17,7 @@ Deploy via Heroku.
  </p>
 
 ## Support   
-Join the [Telegram Group](https://t.me/DivideProjectsDiscussion) for support and the [Channel](https://t.me/DivideProjects) for updates.   
-Demo Bot - [Click here](https://t.me/DPLorenIpsumBot)
+Join the [Telegram Group](https://t.me/DivideProjectsDiscussion) for support and the [Channel](https://t.me/DivideProjects) for updates.
 
 Report bugs, give feature requests there...
 Do fork and star the repository if you like it.
