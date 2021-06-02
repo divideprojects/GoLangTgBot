@@ -1,5 +1,5 @@
 {
-  "name": "Lorem Ipsum Generator",
+  "name": "GoLang Telegram Bot",
   "description": "Golang based telegram bot to generate useless text.",
   "keywords": [
     "telegram",
