@@ -11,7 +11,7 @@ You can even use this repository as a template to make your own GoLang Telegram 
 ## Deploying
 Deploy via Heroku.
 <p>
-<a href="https://heroku.com/deploy?template=https://github.com/DivideProjects/LoremIpsumBot">
+<a href="https://heroku.com/deploy?template=https://github.com/DivideProjects/GoLangTgBot">
   <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
 </a>
  </p>

@@ -1,1 +1,1 @@
-worker: bin/LoremIpsumBot
+worker: bin/GoLangTgBot

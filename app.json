@@ -9,7 +9,7 @@
     "golang bot",
     "golang telegram"
   ],
-  "repository": "https://github.com/DivideProjects/LoremIpsumBot",
+  "repository": "https://github.com/DivideProjects/GoLangTgBot",
   "website": "https://t.me/DivideProjects",
   "success_url": "https://t.me/DivideProjects",
   "env": {
