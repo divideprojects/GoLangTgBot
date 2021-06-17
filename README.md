@@ -25,3 +25,7 @@ Do fork and star the repository if you like it.
 ## Disclaimer
 Licensed under GNU AGPL v3.0.   
 Selling the codes to other people for money is *strictly prohibited*.
+
+## Powered By
+
+[![DivideProjects](https://img.shields.io/badge/Divide-Projects-green?style=for-the-badge&logo=appveyor)](https://t.me/DivideProjectsDiscussion)
