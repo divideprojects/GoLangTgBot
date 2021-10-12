@@ -9,8 +9,8 @@ import (
 
 // Bot is the core Bot object used to send and receive messages.
 type Bot struct {
+	User
 	Token       string
-	User        User
 	APIURL      string
 	Client      http.Client
 	GetTimeout  time.Duration
@@ -30,6 +30,7 @@ func NewBot(token string, opts *BotOpts) (*Bot, error) {
 	b := Bot{
 		Token:      token,
 		GetTimeout: time.Second * 10, // 10 seconds timeout for initial GetMe request, which can be slow.
+		APIURL:     DefaultAPIURL,
 	}
 
 	getTimeout := DefaultGetTimeout

@@ -1,4 +1,2 @@
-github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-beta10 h1:Z3X3zJKEOSLQujkp43L/E2w180H1EHJ5Tzevhqn7GGw=
-github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-beta10/go.mod h1:r815fYWTudnU9JhtsJAxUtuV7QrSgKpChJkfTSMFpfg=
-github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-beta2 h1:rsWe7vZYkf34vwE+wzmDB4hteBlKEwN28HMBny2gcqo=
-github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-beta2/go.mod h1:r815fYWTudnU9JhtsJAxUtuV7QrSgKpChJkfTSMFpfg=
+github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-rc.1 h1:TDob1M3ljHPSZQyPFOZ6ZjOfF4GoYtDA+lfTzd+8Yew=
+github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-rc.1/go.mod h1:r815fYWTudnU9JhtsJAxUtuV7QrSgKpChJkfTSMFpfg=

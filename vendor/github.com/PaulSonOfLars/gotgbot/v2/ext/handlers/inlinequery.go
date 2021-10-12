@@ -13,9 +13,9 @@ type InlineQuery struct {
 	Response Response
 }
 
-func NewInlineQuery(filter filters.InlineQuery, r Response) InlineQuery {
+func NewInlineQuery(f filters.InlineQuery, r Response) InlineQuery {
 	return InlineQuery{
-		Filter:   filter,
+		Filter:   f,
 		Response: r,
 	}
 }
@@ -34,5 +34,4 @@ func (i InlineQuery) CheckUpdate(b *gotgbot.Bot, u *gotgbot.Update) bool {
 
 func (i InlineQuery) Name() string {
 	return fmt.Sprintf("inlinequery_%p", i.Response)
-
 }
