@@ -14,7 +14,7 @@ import (
 
 // AddStickerToSetOpts is the set of optional fields for Bot.AddStickerToSet.
 type AddStickerToSetOpts struct {
-	// PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »
+	// PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	PngSticker InputFile
 	// TGS animation with the sticker, uploaded using multipart/form-data. See https://core.telegram.org/animated_stickers#technical-requirements for technical requirements
 	TgsSticker InputFile
@@ -98,7 +98,7 @@ type AnswerCallbackQueryOpts struct {
 	Text string
 	// If true, an alert will be shown by the client instead of a notification at the top of the chat screen. Defaults to false.
 	ShowAlert bool
-	// URL that will be opened by the user's client. If you have created a Game and accepted the conditions via @Botfather, specify the URL that opens your game — note that this will only work if the query comes from a callback_game button.Otherwise, you may use links like t.me/your_bot?start=XXXX that open your bot with a parameter.
+	// URL that will be opened by the user's client. If you have created a Game and accepted the conditions via @Botfather, specify the URL that opens your game - note that this will only work if the query comes from a callback_game button. Otherwise, you may use links like t.me/your_bot?start=XXXX that open your bot with a parameter.
 	Url string
 	// The maximum amount of time in seconds that the result of the callback query may be cached client-side. Telegram apps will support caching starting in version 3.14. Defaults to 0.
 	CacheTime int64
@@ -139,7 +139,7 @@ type AnswerInlineQueryOpts struct {
 	NextOffset string
 	// If passed, clients will display a button with specified text that switches the user to a private chat with the bot and sends the bot a start message with the parameter switch_pm_parameter
 	SwitchPmText string
-	// Deep-linking parameter for the /start message sent to the bot when user presses the switch button. 1-64 characters, only A-Z, a-z, 0-9, _ and - are allowed.Example: An inline bot that sends YouTube videos can ask the user to connect the bot to their YouTube account to adapt search results accordingly. To do this, it displays a 'Connect your YouTube account' button above the results, or even before showing any. The user presses the button, switches to a private chat with the bot and, in doing so, passes a start parameter that instructs the bot to return an oauth link. Once done, the bot can offer a switch_inline button so that the user can easily return to the chat where they wanted to use the bot's inline capabilities.
+	// Deep-linking parameter for the /start message sent to the bot when user presses the switch button. 1-64 characters, only A-Z, a-z, 0-9, _ and - are allowed. Example: An inline bot that sends YouTube videos can ask the user to connect the bot to their YouTube account to adapt search results accordingly. To do this, it displays a 'Connect your YouTube account' button above the results, or even before showing any. The user presses the button, switches to a private chat with the bot and, in doing so, passes a start parameter that instructs the bot to return an oauth link. Once done, the bot can offer a switch_inline button so that the user can easily return to the chat where they wanted to use the bot's inline capabilities.
 	SwitchPmParameter string
 }
 
@@ -242,6 +242,43 @@ func (bot *Bot) AnswerShippingQuery(shippingQueryId string, ok bool, opts *Answe
 	return b, json.Unmarshal(r, &b)
 }
 
+// BanChatMemberOpts is the set of optional fields for Bot.BanChatMember.
+type BanChatMemberOpts struct {
+	// Date when the user will be unbanned, unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever. Applied for supergroups and channels only.
+	UntilDate int64
+	// Pass True to delete all messages from the chat for the user that is being removed. If False, the user will be able to see messages in the group that were sent before the user was removed. Always True for supergroups and channels.
+	RevokeMessages bool
+}
+
+// BanChatMember Use this method to ban a user in a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
+// - chat_id (type int64): Unique identifier for the target group or username of the target supergroup or channel (in the format @channelusername)
+// - user_id (type int64): Unique identifier of the target user
+// - opts (type BanChatMemberOpts): All optional parameters.
+// https://core.telegram.org/bots/api#banchatmember
+func (bot *Bot) BanChatMember(chatId int64, userId int64, opts *BanChatMemberOpts) (bool, error) {
+	v := urlLib.Values{}
+	if chatId != 0 {
+		v.Add("chat_id", strconv.FormatInt(chatId, 10))
+	}
+	if userId != 0 {
+		v.Add("user_id", strconv.FormatInt(userId, 10))
+	}
+	if opts != nil {
+		if opts.UntilDate != 0 {
+			v.Add("until_date", strconv.FormatInt(opts.UntilDate, 10))
+		}
+		v.Add("revoke_messages", strconv.FormatBool(opts.RevokeMessages))
+	}
+
+	r, err := bot.Get("banChatMember", v)
+	if err != nil {
+		return false, err
+	}
+
+	var b bool
+	return b, json.Unmarshal(r, &b)
+}
+
 // Close Use this method to close the bot instance before moving it from one local server to another. You need to delete the webhook before calling this method to ensure that the bot isn't launched again after server restart. The method will return error 429 in the first 10 minutes after the bot is launched. Returns True on success. Requires no parameters.
 // https://core.telegram.org/bots/api#close
 func (bot *Bot) Close() (bool, error) {
@@ -307,7 +344,7 @@ func (bot *Bot) CopyMessage(chatId int64, fromChatId int64, messageId int64, opt
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -361,7 +398,7 @@ func (bot *Bot) CreateChatInviteLink(chatId int64, opts *CreateChatInviteLinkOpt
 
 // CreateNewStickerSetOpts is the set of optional fields for Bot.CreateNewStickerSet.
 type CreateNewStickerSetOpts struct {
-	// PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »
+	// PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	PngSticker InputFile
 	// TGS animation with the sticker, uploaded using multipart/form-data. See https://core.telegram.org/animated_stickers#technical-requirements for technical requirements
 	TgsSticker InputFile
@@ -494,6 +531,37 @@ func (bot *Bot) DeleteMessage(chatId int64, messageId int64) (bool, error) {
 	}
 
 	r, err := bot.Get("deleteMessage", v)
+	if err != nil {
+		return false, err
+	}
+
+	var b bool
+	return b, json.Unmarshal(r, &b)
+}
+
+// DeleteMyCommandsOpts is the set of optional fields for Bot.DeleteMyCommands.
+type DeleteMyCommandsOpts struct {
+	// A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+	Scope BotCommandScope
+	// A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
+	LanguageCode string
+}
+
+// DeleteMyCommands Use this method to delete the list of the bot's commands for the given scope and user language. After deletion, higher level commands will be shown to affected users. Returns True on success.
+// - opts (type DeleteMyCommandsOpts): All optional parameters.
+// https://core.telegram.org/bots/api#deletemycommands
+func (bot *Bot) DeleteMyCommands(opts *DeleteMyCommandsOpts) (bool, error) {
+	v := urlLib.Values{}
+	if opts != nil {
+		bs, err := json.Marshal(opts.Scope)
+		if err != nil {
+			return false, fmt.Errorf("failed to marshal field scope: %w", err)
+		}
+		v.Add("scope", string(bs))
+		v.Add("language_code", opts.LanguageCode)
+	}
+
+	r, err := bot.Get("deleteMyCommands", v)
 	if err != nil {
 		return false, err
 	}
@@ -932,15 +1000,14 @@ func (bot *Bot) GetChatAdministrators(chatId int64) ([]ChatMember, error) {
 		return nil, err
 	}
 
-	var c []ChatMember
-	return c, json.Unmarshal(r, &c)
+	return unmarshalChatMemberArray(r)
 }
 
 // GetChatMember Use this method to get information about a member of a chat. Returns a ChatMember object on success.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
 // - user_id (type int64): Unique identifier of the target user
 // https://core.telegram.org/bots/api#getchatmember
-func (bot *Bot) GetChatMember(chatId int64, userId int64) (*ChatMember, error) {
+func (bot *Bot) GetChatMember(chatId int64, userId int64) (ChatMember, error) {
 	v := urlLib.Values{}
 	if chatId != 0 {
 		v.Add("chat_id", strconv.FormatInt(chatId, 10))
@@ -954,20 +1021,19 @@ func (bot *Bot) GetChatMember(chatId int64, userId int64) (*ChatMember, error) {
 		return nil, err
 	}
 
-	var c ChatMember
-	return &c, json.Unmarshal(r, &c)
+	return unmarshalChatMember(r)
 }
 
-// GetChatMembersCount Use this method to get the number of members in a chat. Returns Int on success.
+// GetChatMemberCount Use this method to get the number of members in a chat. Returns Int on success.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-// https://core.telegram.org/bots/api#getchatmemberscount
-func (bot *Bot) GetChatMembersCount(chatId int64) (int64, error) {
+// https://core.telegram.org/bots/api#getchatmembercount
+func (bot *Bot) GetChatMemberCount(chatId int64) (int64, error) {
 	v := urlLib.Values{}
 	if chatId != 0 {
 		v.Add("chat_id", strconv.FormatInt(chatId, 10))
 	}
 
-	r, err := bot.Get("getChatMembersCount", v)
+	r, err := bot.Get("getChatMemberCount", v)
 	if err != nil {
 		return 0, err
 	}
@@ -1045,11 +1111,27 @@ func (bot *Bot) GetMe() (*User, error) {
 	return &u, json.Unmarshal(r, &u)
 }
 
-// GetMyCommands Use this method to get the current list of the bot's commands. Requires no parameters. Returns Array of BotCommand on success.
-// Methods and objects used in the inline mode are described in the Inline mode section.
+// GetMyCommandsOpts is the set of optional fields for Bot.GetMyCommands.
+type GetMyCommandsOpts struct {
+	// A JSON-serialized object, describing scope of users. Defaults to BotCommandScopeDefault.
+	Scope BotCommandScope
+	// A two-letter ISO 639-1 language code or an empty string
+	LanguageCode string
+}
+
+// GetMyCommands Use this method to get the current list of the bot's commands for the given scope and user language. Returns Array of BotCommand on success. If commands aren't set, an empty list is returned.
+// - opts (type GetMyCommandsOpts): All optional parameters.
 // https://core.telegram.org/bots/api#getmycommands
-func (bot *Bot) GetMyCommands() ([]BotCommand, error) {
+func (bot *Bot) GetMyCommands(opts *GetMyCommandsOpts) ([]BotCommand, error) {
 	v := urlLib.Values{}
+	if opts != nil {
+		bs, err := json.Marshal(opts.Scope)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field scope: %w", err)
+		}
+		v.Add("scope", string(bs))
+		v.Add("language_code", opts.LanguageCode)
+	}
 
 	r, err := bot.Get("getMyCommands", v)
 	if err != nil {
@@ -1084,7 +1166,7 @@ type GetUpdatesOpts struct {
 	Limit int64
 	// Timeout in seconds for long polling. Defaults to 0, i.e. usual short polling. Should be positive, short polling should be used for testing purposes only.
 	Timeout int64
-	// A JSON-serialized list of the update types you want your bot to receive. For example, specify ["message", "edited_channel_post", "callback_query"] to only receive updates of these types. See Update for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used.Please note that this parameter doesn't affect updates created before the call to the getUpdates, so unwanted updates may be received for a short period of time.
+	// A JSON-serialized list of the update types you want your bot to receive. For example, specify ["message", "edited_channel_post", "callback_query"] to only receive updates of these types. See Update for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used. Please note that this parameter doesn't affect updates created before the call to the getUpdates, so unwanted updates may be received for a short period of time.
 	AllowedUpdates []string
 }
 
@@ -1168,43 +1250,6 @@ func (bot *Bot) GetWebhookInfo() (*WebhookInfo, error) {
 
 	var w WebhookInfo
 	return &w, json.Unmarshal(r, &w)
-}
-
-// KickChatMemberOpts is the set of optional fields for Bot.KickChatMember.
-type KickChatMemberOpts struct {
-	// Date when the user will be unbanned, unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever. Applied for supergroups and channels only.
-	UntilDate int64
-	// Pass True to delete all messages from the chat for the user that is being removed. If False, the user will be able to see messages in the group that were sent before the user was removed. Always True for supergroups and channels.
-	RevokeMessages bool
-}
-
-// KickChatMember Use this method to kick a user from a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
-// - chat_id (type int64): Unique identifier for the target group or username of the target supergroup or channel (in the format @channelusername)
-// - user_id (type int64): Unique identifier of the target user
-// - opts (type KickChatMemberOpts): All optional parameters.
-// https://core.telegram.org/bots/api#kickchatmember
-func (bot *Bot) KickChatMember(chatId int64, userId int64, opts *KickChatMemberOpts) (bool, error) {
-	v := urlLib.Values{}
-	if chatId != 0 {
-		v.Add("chat_id", strconv.FormatInt(chatId, 10))
-	}
-	if userId != 0 {
-		v.Add("user_id", strconv.FormatInt(userId, 10))
-	}
-	if opts != nil {
-		if opts.UntilDate != 0 {
-			v.Add("until_date", strconv.FormatInt(opts.UntilDate, 10))
-		}
-		v.Add("revoke_messages", strconv.FormatBool(opts.RevokeMessages))
-	}
-
-	r, err := bot.Get("kickChatMember", v)
-	if err != nil {
-		return false, err
-	}
-
-	var b bool
-	return b, json.Unmarshal(r, &b)
 }
 
 // LeaveChat Use this method for your bot to leave a group, supergroup or channel. Returns True on success.
@@ -1401,7 +1446,7 @@ type SendAnimationOpts struct {
 	Width int64
 	// Animation height
 	Height int64
-	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files »
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	Thumb InputFile
 	// Animation caption (may also be used when resending animation by file_id), 0-1024 characters after entities parsing
 	Caption string
@@ -1421,7 +1466,7 @@ type SendAnimationOpts struct {
 
 // SendAnimation Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - animation (type InputFile): Animation to send. Pass a file_id as String to send an animation that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an animation from the Internet, or upload a new animation using multipart/form-data. More info on Sending Files »
+// - animation (type InputFile): Animation to send. Pass a file_id as String to send an animation that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an animation from the Internet, or upload a new animation using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendAnimationOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendanimation
 func (bot *Bot) SendAnimation(chatId int64, animation InputFile, opts *SendAnimationOpts) (*Message, error) {
@@ -1497,7 +1542,7 @@ func (bot *Bot) SendAnimation(chatId int64, animation InputFile, opts *SendAnima
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -1528,7 +1573,7 @@ type SendAudioOpts struct {
 	Performer string
 	// Track name
 	Title string
-	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files »
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	Thumb InputFile
 	// Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification bool
@@ -1543,7 +1588,7 @@ type SendAudioOpts struct {
 // SendAudio Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
 // For sending voice messages, use the sendVoice method instead.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - audio (type InputFile): Audio file to send. Pass a file_id as String to send an audio file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an audio file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »
+// - audio (type InputFile): Audio file to send. Pass a file_id as String to send an audio file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an audio file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendAudioOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendaudio
 func (bot *Bot) SendAudio(chatId int64, audio InputFile, opts *SendAudioOpts) (*Message, error) {
@@ -1615,7 +1660,7 @@ func (bot *Bot) SendAudio(chatId int64, audio InputFile, opts *SendAudioOpts) (*
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -1691,7 +1736,7 @@ func (bot *Bot) SendContact(chatId int64, phoneNumber string, firstName string, 
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -1710,7 +1755,7 @@ func (bot *Bot) SendContact(chatId int64, phoneNumber string, firstName string, 
 
 // SendDiceOpts is the set of optional fields for Bot.SendDice.
 type SendDiceOpts struct {
-	// Emoji on which the dice throw animation is based. Currently, must be one of "", "", "", "", "", or "". Dice can have values 1-6 for "", "" and "", values 1-5 for "" and "", and values 1-64 for "". Defaults to ""
+	// Emoji on which the dice throw animation is based. Currently, must be one of "🎲", "🎯", "🏀", "⚽", "🎳", or "🎰". Dice can have values 1-6 for "🎲", "🎯" and "🎳", values 1-5 for "🏀" and "⚽", and values 1-64 for "🎰". Defaults to "🎲"
 	Emoji string
 	// Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification bool
@@ -1739,7 +1784,7 @@ func (bot *Bot) SendDice(chatId int64, opts *SendDiceOpts) (*Message, error) {
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -1758,7 +1803,7 @@ func (bot *Bot) SendDice(chatId int64, opts *SendDiceOpts) (*Message, error) {
 
 // SendDocumentOpts is the set of optional fields for Bot.SendDocument.
 type SendDocumentOpts struct {
-	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files »
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	Thumb InputFile
 	// Document caption (may also be used when resending documents by file_id), 0-1024 characters after entities parsing
 	Caption string
@@ -1780,7 +1825,7 @@ type SendDocumentOpts struct {
 
 // SendDocument Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - document (type InputFile): File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »
+// - document (type InputFile): File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendDocumentOpts): All optional parameters.
 // https://core.telegram.org/bots/api#senddocument
 func (bot *Bot) SendDocument(chatId int64, document InputFile, opts *SendDocumentOpts) (*Message, error) {
@@ -1848,7 +1893,7 @@ func (bot *Bot) SendDocument(chatId int64, document InputFile, opts *SendDocumen
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2086,7 +2131,7 @@ func (bot *Bot) SendLocation(chatId int64, latitude float64, longitude float64, 
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2175,16 +2220,6 @@ type SendMessageOpts struct {
 }
 
 // SendMessage Use this method to send text messages. On success, the sent Message is returned.
-// The Bot API supports basic formatting for messages. You can use bold, italic, underlined and strikethrough text, as well as inline links and pre-formatted code in your bots' messages. Telegram clients will render them accordingly. You can use either markdown-style or HTML-style formatting.
-// Note that Telegram clients will display an alert to the user before opening an inline link ('Open this link?' together with the full URL).
-// Message entities can be nested, providing following restrictions are met:- If two entities has common characters then one of them is fully contained inside another.- bold, italic, underline and strikethrough entities can contain and to be contained in any other entities, except pre and code.- All other entities can't contain each other.
-// Links tg://user?id=<user_id> can be used to mention a user by their ID without using a username. Please note:
-// To use this mode, pass MarkdownV2 in the parse_mode field. Use the following syntax in your message:
-// Please note:
-// To use this mode, pass HTML in the parse_mode field. The following tags are currently supported:
-// Please note:
-// This is a legacy mode, retained for backward compatibility. To use this mode, pass Markdown in the parse_mode field. Use the following syntax in your message:
-// Please note:
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 // - text (type string): Text of the message to be sent, 1-4096 characters after entities parsing
 // - opts (type SendMessageOpts): All optional parameters.
@@ -2211,7 +2246,7 @@ func (bot *Bot) SendMessage(chatId int64, text string, opts *SendMessageOpts) (*
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2248,7 +2283,7 @@ type SendPhotoOpts struct {
 
 // SendPhoto Use this method to send photos. On success, the sent Message is returned.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - photo (type InputFile): Photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a photo from the Internet, or upload a new photo using multipart/form-data. The photo must be at most 10 MB in size. The photo's width and height must not exceed 10000 in total. Width and height ratio must be at most 20. More info on Sending Files »
+// - photo (type InputFile): Photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a photo from the Internet, or upload a new photo using multipart/form-data. The photo must be at most 10 MB in size. The photo's width and height must not exceed 10000 in total. Width and height ratio must be at most 20. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendPhotoOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendphoto
 func (bot *Bot) SendPhoto(chatId int64, photo InputFile, opts *SendPhotoOpts) (*Message, error) {
@@ -2294,7 +2329,7 @@ func (bot *Bot) SendPhoto(chatId int64, photo InputFile, opts *SendPhotoOpts) (*
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2391,7 +2426,7 @@ func (bot *Bot) SendPoll(chatId int64, question string, options []string, opts *
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2422,7 +2457,7 @@ type SendStickerOpts struct {
 
 // SendSticker Use this method to send static .WEBP or animated .TGS stickers. On success, the sent Message is returned.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - sticker (type InputFile): Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »
+// - sticker (type InputFile): Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendStickerOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendsticker
 func (bot *Bot) SendSticker(chatId int64, sticker InputFile, opts *SendStickerOpts) (*Message, error) {
@@ -2459,7 +2494,7 @@ func (bot *Bot) SendSticker(chatId int64, sticker InputFile, opts *SendStickerOp
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2528,7 +2563,7 @@ func (bot *Bot) SendVenue(chatId int64, latitude float64, longitude float64, tit
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2553,7 +2588,7 @@ type SendVideoOpts struct {
 	Width int64
 	// Video height
 	Height int64
-	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files »
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	Thumb InputFile
 	// Video caption (may also be used when resending videos by file_id), 0-1024 characters after entities parsing
 	Caption string
@@ -2575,7 +2610,7 @@ type SendVideoOpts struct {
 
 // SendVideo Use this method to send video files, Telegram clients support mp4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - video (type InputFile): Video to send. Pass a file_id as String to send a video that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a video from the Internet, or upload a new video using multipart/form-data. More info on Sending Files »
+// - video (type InputFile): Video to send. Pass a file_id as String to send a video that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a video from the Internet, or upload a new video using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendVideoOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendvideo
 func (bot *Bot) SendVideo(chatId int64, video InputFile, opts *SendVideoOpts) (*Message, error) {
@@ -2652,7 +2687,7 @@ func (bot *Bot) SendVideo(chatId int64, video InputFile, opts *SendVideoOpts) (*
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2675,7 +2710,7 @@ type SendVideoNoteOpts struct {
 	Duration int64
 	// Video width and height, i.e. diameter of the video message
 	Length int64
-	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files »
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 	Thumb InputFile
 	// Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification bool
@@ -2689,7 +2724,7 @@ type SendVideoNoteOpts struct {
 
 // SendVideoNote As of v.4.0, Telegram clients support rounded square mp4 videos of up to 1 minute long. Use this method to send video messages. On success, the sent Message is returned.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - video_note (type InputFile): Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. More info on Sending Files ». Sending video notes by a URL is currently unsupported
+// - video_note (type InputFile): Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files. Sending video notes by a URL is currently unsupported
 // - opts (type SendVideoNoteOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendvideonote
 func (bot *Bot) SendVideoNote(chatId int64, videoNote InputFile, opts *SendVideoNoteOpts) (*Message, error) {
@@ -2753,7 +2788,7 @@ func (bot *Bot) SendVideoNote(chatId int64, videoNote InputFile, opts *SendVideo
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -2792,7 +2827,7 @@ type SendVoiceOpts struct {
 
 // SendVoice Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .OGG file encoded with OPUS (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future.
 // - chat_id (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-// - voice (type InputFile): Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »
+// - voice (type InputFile): Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // - opts (type SendVoiceOpts): All optional parameters.
 // https://core.telegram.org/bots/api#sendvoice
 func (bot *Bot) SendVoice(chatId int64, voice InputFile, opts *SendVoiceOpts) (*Message, error) {
@@ -2841,7 +2876,7 @@ func (bot *Bot) SendVoice(chatId int64, voice InputFile, opts *SendVoiceOpts) (*
 		}
 		v.Add("allow_sending_without_reply", strconv.FormatBool(opts.AllowSendingWithoutReply))
 		if opts.ReplyMarkup != nil {
-			bs, err := opts.ReplyMarkup.ReplyMarkup()
+			bs, err := json.Marshal(opts.ReplyMarkup)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal field reply_markup: %w", err)
 			}
@@ -3060,10 +3095,19 @@ func (bot *Bot) SetGameScore(userId int64, score int64, opts *SetGameScoreOpts) 
 	return &m, json.Unmarshal(r, &m)
 }
 
-// SetMyCommands Use this method to change the list of the bot's commands. Returns True on success.
+// SetMyCommandsOpts is the set of optional fields for Bot.SetMyCommands.
+type SetMyCommandsOpts struct {
+	// A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+	Scope BotCommandScope
+	// A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
+	LanguageCode string
+}
+
+// SetMyCommands Use this method to change the list of the bot's commands. See https://core.telegram.org/bots#commands for more details about bot commands. Returns True on success.
 // - commands (type []BotCommand): A JSON-serialized list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified.
+// - opts (type SetMyCommandsOpts): All optional parameters.
 // https://core.telegram.org/bots/api#setmycommands
-func (bot *Bot) SetMyCommands(commands []BotCommand) (bool, error) {
+func (bot *Bot) SetMyCommands(commands []BotCommand, opts *SetMyCommandsOpts) (bool, error) {
 	v := urlLib.Values{}
 	if commands != nil {
 		bs, err := json.Marshal(commands)
@@ -3071,6 +3115,14 @@ func (bot *Bot) SetMyCommands(commands []BotCommand) (bool, error) {
 			return false, fmt.Errorf("failed to marshal field commands: %w", err)
 		}
 		v.Add("commands", string(bs))
+	}
+	if opts != nil {
+		bs, err := json.Marshal(opts.Scope)
+		if err != nil {
+			return false, fmt.Errorf("failed to marshal field scope: %w", err)
+		}
+		v.Add("scope", string(bs))
+		v.Add("language_code", opts.LanguageCode)
 	}
 
 	r, err := bot.Get("setMyCommands", v)
@@ -3131,7 +3183,7 @@ func (bot *Bot) SetStickerPositionInSet(sticker string, position int64) (bool, e
 
 // SetStickerSetThumbOpts is the set of optional fields for Bot.SetStickerSetThumb.
 type SetStickerSetThumbOpts struct {
-	// A PNG image with the thumbnail, must be up to 128 kilobytes in size and have width and height exactly 100px, or a TGS animation with the thumbnail up to 32 kilobytes in size; see https://core.telegram.org/animated_stickers#technical-requirements for animated sticker technical requirements. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files ». Animated sticker set thumbnail can't be uploaded via HTTP URL.
+	// A PNG image with the thumbnail, must be up to 128 kilobytes in size and have width and height exactly 100px, or a TGS animation with the thumbnail up to 32 kilobytes in size; see https://core.telegram.org/animated_stickers#technical-requirements for animated sticker technical requirements. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files: https://core.telegram.org/bots/api#sending-files. Animated sticker set thumbnail can't be uploaded via HTTP URL.
 	Thumb InputFile
 }
 
@@ -3188,7 +3240,7 @@ type SetWebhookOpts struct {
 	IpAddress string
 	// Maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100. Defaults to 40. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
 	MaxConnections int64
-	// A JSON-serialized list of the update types you want your bot to receive. For example, specify ["message", "edited_channel_post", "callback_query"] to only receive updates of these types. See Update for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used.Please note that this parameter doesn't affect updates created before the call to the setWebhook, so unwanted updates may be received for a short period of time.
+	// A JSON-serialized list of the update types you want your bot to receive. For example, specify ["message", "edited_channel_post", "callback_query"] to only receive updates of these types. See Update for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used. Please note that this parameter doesn't affect updates created before the call to the setWebhook, so unwanted updates may be received for a short period of time.
 	AllowedUpdates []string
 	// Pass True to drop all pending updates
 	DropPendingUpdates bool
@@ -3328,7 +3380,7 @@ type UnbanChatMemberOpts struct {
 	OnlyIfBanned bool
 }
 
-// UnbanChatMember Use this method to unban a previously kicked user in a supergroup or channel. The user will not return to the group or channel automatically, but will be able to join via link, etc. The bot must be an administrator for this to work. By default, this method guarantees that after the call the user is not a member of the chat, but will be able to join it. So if the user is a member of the chat they will also be removed from the chat. If you don't want this, use the parameter only_if_banned. Returns True on success.
+// UnbanChatMember Use this method to unban a previously banned user in a supergroup or channel. The user will not return to the group or channel automatically, but will be able to join via link, etc. The bot must be an administrator for this to work. By default, this method guarantees that after the call the user is not a member of the chat, but will be able to join it. So if the user is a member of the chat they will also be removed from the chat. If you don't want this, use the parameter only_if_banned. Returns True on success.
 // - chat_id (type int64): Unique identifier for the target group or username of the target supergroup or channel (in the format @username)
 // - user_id (type int64): Unique identifier of the target user
 // - opts (type UnbanChatMemberOpts): All optional parameters.
@@ -3404,7 +3456,7 @@ func (bot *Bot) UnpinChatMessage(chatId int64, opts *UnpinChatMessageOpts) (bool
 
 // UploadStickerFile Use this method to upload a .PNG file with a sticker for later use in createNewStickerSet and addStickerToSet methods (can be used multiple times). Returns the uploaded File on success.
 // - user_id (type int64): User identifier of sticker file owner
-// - png_sticker (type InputFile): PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. More info on Sending Files »
+// - png_sticker (type InputFile): PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. More info on Sending Files: https://core.telegram.org/bots/api#sending-files
 // https://core.telegram.org/bots/api#uploadstickerfile
 func (bot *Bot) UploadStickerFile(userId int64, pngSticker InputFile) (*File, error) {
 	v := urlLib.Values{}
