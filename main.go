@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
@@ -14,11 +13,14 @@ import (
 
 func main() {
 	// Put Your Bot Token via ENV Vars
-	b, err := gotgbot.NewBot(os.Getenv("BOT_TOKEN"), &gotgbot.BotOpts{
-		Client:      http.Client{},
-		GetTimeout:  gotgbot.DefaultGetTimeout,
-		PostTimeout: gotgbot.DefaultPostTimeout,
-	})
+	b, err := gotgbot.NewBot(
+		os.Getenv("BOT_TOKEN"),
+		&gotgbot.BotOpts{
+			Client:      http.Client{},
+			GetTimeout:  gotgbot.DefaultGetTimeout,
+			PostTimeout: gotgbot.DefaultPostTimeout,
+		},
+	)
 	if err != nil {
 		panic("failed to create new bot: " + err.Error())
 	}
@@ -29,7 +31,7 @@ func main() {
 
 	// Handlers for runnning commands.
 	dispatcher.AddHandler(handlers.NewCommand("start", start))
-	dispatcher.AddHandler(handlers.NewCommand("get", get))
+	dispatcher.AddHandler(handlers.NewCommand("run", run))
 
 	err = updater.StartPolling(b, &ext.PollingOpts{DropPendingUpdates: true})
 	if err != nil {
@@ -49,66 +51,32 @@ func start(bot *gotgbot.Bot, ctx *ext.Context) error {
 	msg := ctx.EffectiveMessage
 	// To ensure bot does not reply outside of private chats
 	if ctx.EffectiveChat.Type != "private" {
-		return nil
+		return ext.EndGroups
 	}
 
 	user_name := ctx.EffectiveUser.FirstName
 
 	// Following string is replied to cmd user on /start
 	start_msg := "*Hi %v*,\n" +
-		"I am a *Lorem Ipsum Generator Bot*\n" +
+		"I am a Simple Telegram made using [Go](https://go.dev)*\n" +
 		"Brought to You with ❤️ By @DivideProjects"
 	// For Checking either user joined channel or not
 	msg.Reply(bot, fmt.Sprintf(start_msg, user_name), &gotgbot.SendMessageOpts{ParseMode: "Markdown"})
-	return nil
+	return ext.EndGroups
 }
 
-func get(bot *gotgbot.Bot, ctx *ext.Context) error {
+func run(bot *gotgbot.Bot, ctx *ext.Context) error {
 	chat := ctx.EffectiveChat
-	user := ctx.EffectiveUser
 	msg := ctx.EffectiveMessage
 
 	// To ensure bot does not reply outside of private chats
 	if chat.Type != "private" {
-		return nil
+		msg.Reply(bot, "This command only works in private chats!", nil)
+		return ext.EndGroups
 	}
-	quote := "Lorem Ipsum is simply dummy text of the printing and typesetting industry." +
-		" Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an " +
-		"unknown printer took a galley of type and scrambled it to make a type specimen book." +
-		" It has survived not only five centuries, but also the leap into electronic typesetting," +
-		" remaining essentially unchanged. It was popularised in the 1960s with the release of " +
-		"Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing" +
-		"software like Aldus PageMaker including versions of Lorem Ipsum."
-	channel_id, cerror := strconv.Atoi(os.Getenv("AUTH_GROUP_ID"))
-	if cerror != nil {
-		log.Fatalln(cerror)
-		log.Fatalln("Please Provide me a valid Channel/Supergroup ID")
-	}
-	member, eror := bot.GetChatMember(int64(channel_id), user.Id)
-	if eror != nil {
-		log.Fatalln(eror)
-		bot.SendMessage(chat.Id, "Bot not admin in JoinCheck Channel", nil)
-		return nil
-	}
+	text := "This command does nothing, you can build your bot by looking my source code here:\nhttps://github.com/DivideProjects/GoLangTgBot"
 
-	// For Checking either user joined channel or not
-	if member.Status == "member" || member.Status == "administrator" || member.Status == "creator" {
-		_, err := msg.Reply(bot, fmt.Sprintf("*Sample Text:*\n%v", quote), &gotgbot.SendMessageOpts{
-			ParseMode: "Markdown",
-		})
-		if err != nil {
-			log.Fatalln(err)
-			log.Fatalln("failed to send: " + err.Error())
-		}
-	} else {
-		// An Error message replied to command user if he's not member of the JoinCheck Channel
-		url, eror := bot.ExportChatInviteLink(int64(channel_id))
-		if eror != nil {
-			log.Fatalln(eror)
-			bot.SendMessage(chat.Id, "I need invite rights in Channel to get the invite link!", nil)
-			return nil
-		}
-		msg.Reply(bot, fmt.Sprintf("*You must join* [My Bots Channel](%v) *to use me.*", url), &gotgbot.SendMessageOpts{ParseMode: "Markdown", DisableWebPagePreview: true})
-	}
+	msg.Reply(bot, text, &gotgbot.SendMessageOpts{ParseMode: "Markdown", DisableWebPagePreview: false})
+
 	return nil
 }

@@ -1,6 +1,6 @@
 {
   "name": "GoLang Telegram Bot",
-  "description": "Golang based telegram bot to generate useless text.",
+  "description": "Golang based sample telegram bot.",
   "keywords": [
     "telegram",
     "telegram-bot",
@@ -15,11 +15,6 @@
   "env": {
     "BOT_TOKEN": {
       "description": "Bot Token, Get It From @BotFather.",
-      "value": "",
-      "required": true
-    },
-    "AUTH_GROUP_ID": {
-      "description": "Telegram ID of your public channel.",
       "value": "",
       "required": true
     }
