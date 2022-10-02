@@ -33,7 +33,7 @@ func main() {
 
 	err = updater.StartPolling(b, &ext.PollingOpts{DropPendingUpdates: true})
 	if err != nil {
-		log.Fatalf("[Polling] Failed to start polling: %v\n", err)
+		log.Fatalf("[Polling] Failed to start polling: %w\n", err)
 	} else {
 		log.Println("[Polling] Started Polling...!")
 	}
@@ -59,7 +59,7 @@ func start(bot *gotgbot.Bot, ctx *ext.Context) error {
 		"I am a Simple Telegram made using [Go](https://go.dev)*\n" +
 		"Brought to You with ❤️ By @DivideProjects"
 	// For Checking either user joined channel or not
-	msg.Reply(bot, fmt.Sprintf(start_msg, user_name), &gotgbot.SendMessageOpts{ParseMode: "Markdown"})
+	_, _ = msg.Reply(bot, fmt.Sprintf(start_msg, user_name), &gotgbot.SendMessageOpts{ParseMode: "Markdown"})
 	return ext.EndGroups
 }
 
@@ -74,7 +74,7 @@ func run(bot *gotgbot.Bot, ctx *ext.Context) error {
 	}
 	text := "This command does nothing, you can build your bot by looking my source code here:\nhttps://github.com/DivideProjects/GoLangTgBot"
 
-	msg.Reply(bot, text, &gotgbot.SendMessageOpts{ParseMode: "Markdown", DisableWebPagePreview: false})
+	_, _ = msg.Reply(bot, text, &gotgbot.SendMessageOpts{ParseMode: "Markdown", DisableWebPagePreview: false})
 
-	return nil
+	return ext.EndGroups
 }
