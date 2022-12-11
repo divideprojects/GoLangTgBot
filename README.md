@@ -1,4 +1,7 @@
 # GoLang Telegram Bot
+
+[![CI](https://github.com/divideprojects/GoLangTgBot/actions/workflows/ci.yml/badge.svg)](https://github.com/divideprojects/GoLangTgBot/actions/workflows/ci.yml)
+
 GoLang Telegram Bot, written in GoLang via gotgbot library.
 You can even use this repository as a template to make your own GoLang Telegram Bot.
 
