@@ -17,7 +17,7 @@ Deploy via Heroku.
 </p>
 
 ## Support   
-Join the [Telegram Group](https://t.me/DivideProjectsDiscussion) for support and the [Channel](https://t.me/DivideProjects) for updates.
+Join the [Telegram Group](https://t.me/DivideSupport) for support and the [Channel](https://t.me/DivideProjects) for updates.
 
 Report bugs, give feature requests there...
 Do fork and star :star: the repository if you like it.
@@ -28,4 +28,4 @@ Selling the codes to other people for money is *strictly prohibited*.
 
 ## Powered By
 
-[![DivideProjects](https://img.shields.io/badge/Divide-Projects-green?style=for-the-badge&logo=appveyor)](https://t.me/DivideProjectsDiscussion)
+[![DivideProjects](https://img.shields.io/badge/Divide-Projects-green?style=for-the-badge&logo=appveyor)](https://t.me/DivideSupport)
