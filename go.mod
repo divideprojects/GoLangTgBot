@@ -1,4 +1,4 @@
-module github.com/DivideProjects/GoLangTgBot
+module github.com/divkix/GoLangTgBot
 
 // +heroku goVersion go1.17
 go 1.17

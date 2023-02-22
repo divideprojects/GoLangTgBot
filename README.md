@@ -1,6 +1,6 @@
 # GoLang Telegram Bot
 
-[![CI](https://github.com/divideprojects/GoLangTgBot/actions/workflows/ci.yml/badge.svg)](https://github.com/divideprojects/GoLangTgBot/actions/workflows/ci.yml)
+[![CI](https://github.com/divkix/GoLangTgBot/actions/workflows/ci.yml/badge.svg)](https://github.com/divkix/GoLangTgBot/actions/workflows/ci.yml)
 
 GoLang Telegram Bot, written in GoLang via gotgbot library.
 You can even use this repository as a template to make your own GoLang Telegram Bot.
@@ -13,7 +13,7 @@ You can even use this repository as a template to make your own GoLang Telegram 
 ## Deploying
 Deploy via Heroku.
 <p>
-  <a href="https://heroku.com/deploy?template=https://github.com/DivideProjects/GoLangTgBot"><img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy"></a>
+  <a href="https://heroku.com/deploy?template=https://github.com/divkix/GoLangTgBot"><img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy"></a>
 </p>
 
 ## Support   

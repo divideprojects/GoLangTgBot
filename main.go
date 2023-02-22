@@ -72,7 +72,7 @@ func run(bot *gotgbot.Bot, ctx *ext.Context) error {
 		msg.Reply(bot, "This command only works in private chats!", nil)
 		return ext.EndGroups
 	}
-	text := "This command does nothing, you can build your bot by looking my source code here:\nhttps://github.com/DivideProjects/GoLangTgBot"
+	text := "This command does nothing, you can build your bot by looking my source code here:\nhttps://github.com/divkix/GoLangTgBot"
 
 	_, _ = msg.Reply(bot, text, &gotgbot.SendMessageOpts{ParseMode: "Markdown", DisableWebPagePreview: false})
 
